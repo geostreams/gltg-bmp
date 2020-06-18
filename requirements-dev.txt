@@ -1,0 +1,4 @@
+black
+ipython
+pre-commit
+xlrd
