@@ -98,6 +98,8 @@ services:
         restart: unless-stopped
         networks:
             - clowder
+        ports:
+            - 9992:9992
         environment:
             - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management path_prefix "/rabbitmq"
             - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-guest}
@@ -108,14 +110,8 @@ services:
             - "traefik.port=15672"
             - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: /rabbitmq"
             - "traefik.website.frontend.whiteList.sourceRange=${TRAEFIK_IPFILTER:-172.16.0.0/12}"
-        #    healthcheck:
-        #        test: ["CMD", "rabbitmq-healthcheck"]
-        #        interval: 10s
-        #        timeout: 20s
-        #        retries: 3
         volumes:
             - rabbitmq:/var/lib/rabbitmq
-    #      - ./rabbitmq-healthcheck:/usr/local/bin/rabbitmq-healthcheck
 
     # search index (optional, needed for search and sorting future)
     elasticsearch:
@@ -150,8 +146,7 @@ services:
             - "traefik.frontend.rule=${TRAEFIK_FRONTEND_RULE:-}PathPrefixStrip:/monitor"
 
     bmp_data_extractor:
-        build:
-            context: ./bmp_data_extractor
+        image: clowder/pyclowder:onbuild
         restart: unless-stopped
         networks:
             - clowder
@@ -159,7 +154,10 @@ services:
             - rabbitmq
             - clowder
         environment:
+            - MAIN_SCRIPT=bmp_data_extractor.py
             - RABBITMQ_URI=${RABBITMQ_URI:-amqp://guest:guest@rabbitmq/%2F}
+        volumes:
+            - ./bmp_data_extractor:/home/clowder
 
 # ----------------------------------------------------------------------
 # NETWORK FOR CONTAINER COMMUNICATION

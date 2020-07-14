@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function help() {
+help() {
     echo "Usage          $0 -h | [-d] <flask-command> <flask-args>"
     echo "-h             show this help"
     echo "-d    --dev    set the environment to development and debug to true for the given flask command"

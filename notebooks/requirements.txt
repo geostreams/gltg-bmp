@@ -1,2 +1,3 @@
 jupyterlab
 jupyter-nbextensions-configurator
+matplotlib

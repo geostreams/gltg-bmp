@@ -1,7 +1,0 @@
-.env
-
-volumes/*
-!volumes/clowder/
-
-volumes/clowder/*
-!volumes/clowder/custom/

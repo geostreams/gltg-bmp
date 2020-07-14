@@ -1,11 +1,11 @@
-data/
 instance/
+logs/
 resources/
 
 .env
 
-volumes/*
-!volumes/clowder/
+clowder/volumes/*
+!clowder/volumes/clowder/
 
-volumes/clowder/*
-!volumes/clowder/custom/
+clowder/volumes/clowder/*
+!clowder/volumes/clowder/custom/

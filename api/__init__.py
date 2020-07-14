@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from api.utils.import_data import import_data
+from api.utils.init_db import init_db
 
 db = SQLAlchemy()
 
@@ -15,10 +15,10 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     db.init_app(app)
-    app.cli.add_command(import_data)
+    app.cli.add_command(init_db)
 
-    from api import auth, practices
-    app.register_blueprint(auth.bp)
+    from api import practices
+
     app.register_blueprint(practices.bp)
 
     return app
