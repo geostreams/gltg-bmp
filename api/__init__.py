@@ -1,9 +1,19 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from api.utils.init_db import init_db
+from flask_sqlalchemy.model import BindMetaMixin, Model
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 
-db = SQLAlchemy()
+from api.init_db import init_db
+
+
+class NoNameMeta(BindMetaMixin, DeclarativeMeta):
+    pass
+
+
+db = SQLAlchemy(
+    model_class=declarative_base(cls=Model, metaclass=NoNameMeta, name="Model")
+)
 
 
 def create_app(test_config=None):
@@ -17,8 +27,8 @@ def create_app(test_config=None):
     db.init_app(app)
     app.cli.add_command(init_db)
 
-    from api import practices
+    from api import views
 
-    app.register_blueprint(practices.bp)
+    app.register_blueprint(views.api)
 
     return app

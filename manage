@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 help() {
     echo "Usage          $0 -h | [-d] <flask-command> <flask-args>"
@@ -25,4 +25,4 @@ do
     esac
 done
 
-flask $1
+flask "$1"
