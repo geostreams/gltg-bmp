@@ -1,13 +1,12 @@
 #!/usr/bin/env sh
 
 help() {
-    echo "Usage          $0 -h | [-d] <flask-command> <flask-args>"
+    echo "Usage"
     echo "-h             show this help"
-    echo "-d    --dev    set the environment to development and debug to true for the given flask command"
+    echo "-d    --dev    set the environment to development and debug to true for the flask app"
     exit
 }
 
-export FLASK_APP=api
 export FLASK_DEBUG=0
 export FLASK_ENV=production
 
@@ -20,9 +19,8 @@ do
     -d|--dev)
     FLASK_DEBUG=1
     FLASK_ENV=development
-    shift
     ;;
     esac
 done
 
-flask "$1"
+python app.py

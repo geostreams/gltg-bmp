@@ -1,14 +1,38 @@
 import json
+import os
 from functools import reduce
 
-import click
 import geopandas as gpd
 import pandas as pd
 import sqlalchemy
-from flask import current_app
-from flask.cli import with_appcontext
+from dotenv import load_dotenv
 from geoalchemy2 import Geometry
 from geoalchemy2 import WKTElement
+
+load_dotenv()
+
+CONFIG = {
+    "database_uri": os.getenv("DATABASE_URI"),
+    "boundaries": {"source": "./data/boundaries.xlsx"},
+    "assumptions": {"source": "./data/assumptions.xlsx"},
+    "practices": {
+        "extra_input_args": {
+            "io": "./resources/1_EQIP_CSP_319 Practices 2008_2017_2.3.1.xlsm",
+            "sheet_name": "Practices Applied",
+            "header": 1,
+            "usecols": "A:M",
+            "dtype": {
+                "HUC 8": "str",
+                "HUC 12": "str",
+                "County Code": "str",
+                "NRCS Practice Code": "str",
+                "Applied Date": "Int64",
+            },
+        },
+        "extra_output_args": {"if_exists": "replace"},
+    },
+    "huc8": {"source": "./resources/WBD_National_GDB/WBD_National_GDB.gdb"},
+}
 
 
 def clean_column_names(df: pd.DataFrame):
@@ -17,8 +41,9 @@ def clean_column_names(df: pd.DataFrame):
     )
 
 
-def get_states(config):
-    source_file = config["source"]
+def get_states():
+    print("Getting States...")
+    source_file = CONFIG["boundaries"]["source"]
     states = pd.read_excel(
         source_file,
         sheet_name="States",
@@ -40,8 +65,9 @@ def get_states(config):
     return states.set_index(states["state"]).sort_index().drop("state", axis=1)
 
 
-def get_huc8_meta(config):
-    source_file = config["source"]
+def get_huc8_meta():
+    print("Getting HUC8 metadata...")
+    source_file = CONFIG["boundaries"]["source"]
     huc8_meta = pd.read_excel(
         source_file,
         sheet_name="HUC8",
@@ -63,8 +89,9 @@ def get_huc8_meta(config):
     return huc8_meta.set_index(huc8_meta["code"]).sort_index().drop("code", axis=1)
 
 
-def get_assumptions(config):
-    source_file = config["source"]
+def get_assumptions():
+    print("Getting assumptions...")
+    source_file = CONFIG["assumptions"]["source"]
     assumptions = pd.read_excel(source_file, sheet_name="Practices", dtype="str")
     assumptions["wq"] = pd.to_numeric(assumptions["wq"]).astype("Int64")
     assumptions = (
@@ -98,8 +125,11 @@ def get_assumptions(config):
     )
 
 
-def get_practices(config):
-    practices = pd.read_excel(parse_dates=False, **config["extra_input_args"])
+def get_practices():
+    print("Getting practices...")
+    practices = pd.read_excel(
+        parse_dates=False, **CONFIG["practices"]["extra_input_args"]
+    )
     practices.index += 1
     practices.columns = clean_column_names(practices)
 
@@ -112,6 +142,7 @@ def update_practices(
     huc8_meta: pd.DataFrame,
     practices: pd.DataFrame,
 ):
+    print("Updating practices...")
     missing_huc8 = set()
     sunset = []
     active_year = []
@@ -304,8 +335,9 @@ def update_practices(
     return calculated_columns
 
 
-def get_huc8_boundaries(config, practices: pd.DataFrame):
-    huc8 = gpd.read_file(config["source"], layer="WBDHU8")
+def get_huc8_boundaries(practices: pd.DataFrame):
+    print("Getting HUC8 boundaries...")
+    huc8 = gpd.read_file(CONFIG["huc8"]["source"], layer="WBDHU8")
     huc8.to_crs("EPSG:4326", inplace=True)
     huc8.columns = clean_column_names(huc8)
     huc8.huc8 = huc8.huc8.astype(str)
@@ -313,6 +345,7 @@ def get_huc8_boundaries(config, practices: pd.DataFrame):
     huc8 = huc8[huc8["huc8"].isin(practices["huc_8"])][
         ["huc8", "name", "areaacres", "states", "geometry"]
     ]
+    huc8["states"] = huc8["states"].apply(lambda x: x.split(","))
     huc8["geometry"] = huc8["geometry"].apply(
         lambda geom: WKTElement(geom.wkt, srid=4326)
     )
@@ -321,26 +354,25 @@ def get_huc8_boundaries(config, practices: pd.DataFrame):
     return huc8
 
 
-@click.command("init-db")
-@with_appcontext
-def init_db():
-    engine = sqlalchemy.create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
-
-    config = current_app.config["INIT_DB"]
-
-    states = get_states(config["boundaries"])
-    huc8_meta = get_huc8_meta(config["boundaries"])
-    assumptions = get_assumptions(config["assumptions"])
-    practices = get_practices(config["practices"])
+def import_data():
+    print("Importing data...")
+    states = get_states()
+    huc8_meta = get_huc8_meta()
+    assumptions = get_assumptions()
+    practices = get_practices()
     practices = practices.merge(
         update_practices(assumptions, states, huc8_meta, practices),
         left_index=True,
         right_index=True,
     )
-    huc8_boundaries = get_huc8_boundaries(config["huc8"], practices)
+    huc8_boundaries = get_huc8_boundaries(practices)
 
+    engine = sqlalchemy.create_engine(CONFIG["database_uri"])
+
+    print("Importing states...")
     states.to_sql("states", con=engine, index_label="id", if_exists="replace")
 
+    print("Importing assumptions...")
     assumptions.to_sql(
         "assumptions",
         con=engine,
@@ -358,17 +390,26 @@ def init_db():
         },
     )
 
+    print("Importing practices...")
     practices.to_sql(
         "practices",
         con=engine,
         index_label="id",
         dtype={"ancillary_benefits": sqlalchemy.types.JSON},
-        **config["practices"]["extra_output_args"]
+        **CONFIG["practices"]["extra_output_args"]
     )
 
+    print("Importing HUC8 boundaries...")
     huc8_boundaries.to_sql(
         "huc8",
         con=engine,
         if_exists="replace",
-        dtype={"geometry": Geometry("MultiPolygon", srid=4326)},
+        dtype={
+            "states": sqlalchemy.types.JSON,
+            "geometry": Geometry("MultiPolygon", srid=4326),
+        },
     )
+
+
+if __name__ == "__main__":
+    import_data()
