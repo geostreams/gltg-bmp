@@ -13,15 +13,23 @@ paths:
       tags:
         - Assumptions
       summary: Get all assumptions
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
       responses:
         '200':
           description: Return assumptions
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Assumption'
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Assumption'
 
   '/assumptions/{assumption_id}':
     get:
@@ -45,15 +53,23 @@ paths:
       tags:
         - HUC8
       summary: Get all HUC8s
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
       responses:
         '200':
           description: Return HUC8s
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/HUC8'
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HUC8'
 
   '/huc8/{huc8_id}':
     get:
@@ -77,15 +93,23 @@ paths:
       tags:
         - Practices
       summary: Get all practices
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
       responses:
         '200':
           description: Return practices
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Practice'
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Practice'
 
   '/practices/{practice_id}':
     get:
@@ -109,15 +133,23 @@ paths:
       tags:
         - States
       summary: Get all states
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
       responses:
         '200':
           description: Return states
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/State'
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/State'
 
   '/states/{state_id}':
     get:
@@ -138,6 +170,24 @@ paths:
 
 components:
   parameters:
+    page:
+      name: page
+      description: The page number
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    limit:
+      name: limit
+      description: The number of items per page.
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
     assumption_id:
       name: assumption_id
       description: Assumption unique identifier
@@ -168,6 +218,20 @@ components:
         type: string
 
   schemas:
+    Pagination:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        first:
+          type: string
+        last:
+          type: string
+        previous:
+          type: string
+        next:
+          type: string
     Assumption:
       type: object
       properties:

@@ -1,9 +1,9 @@
-from flask.json import jsonify
 from geoalchemy2 import Geometry
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import Text
 
+from api import helpers
 from api.db import Base
 
 
@@ -29,8 +29,8 @@ class HUC8(Base):
 
 
 def get(huc8_id):
-    return jsonify(HUC8.query.get(huc8_id).serialize())
+    return helpers.get(HUC8, huc8_id)
 
 
-def search():
-    return jsonify(list(map(lambda x: x.serialize(), HUC8.query.all())))
+def search(page, limit):
+    return helpers.search(HUC8, page, limit)

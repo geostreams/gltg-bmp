@@ -1,13 +1,10 @@
-from flask.json import jsonify
 from sqlalchemy import BigInteger
 from sqlalchemy import Column
 from sqlalchemy import Float
-from sqlalchemy import ForeignKey
 from sqlalchemy import JSON
 from sqlalchemy import Text
-from sqlalchemy.orm import backref
-from sqlalchemy.orm import relationship
 
+from api import helpers
 from api.db import Base
 
 
@@ -15,9 +12,9 @@ class Practice(Base):
     __tablename__ = "practices"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    huc_8 = Column(Text, ForeignKey("huc8.huc8"))
+    huc_8 = Column(Text)
     huc_12 = Column(Text)
-    state = Column(Text, ForeignKey("states.id"))
+    state = Column(Text)
     county_code = Column(Text)
     county = Column(Text)
     nrcs_practice_code = Column(Text)
@@ -40,10 +37,6 @@ class Practice(Base):
     n_reduction_percentage_statewide = Column(Float(53))
     p_reduction_gom_lbs = Column(Float(53))
     n_reduction_gom_lbs = Column(Float(53))
-
-    huc_8_object = relationship("HUC8", backref=backref("practices", lazy=True))
-
-    state_object = relationship("State", backref=backref("practices", lazy=True))
 
     def serialize(self):
         return {
@@ -77,8 +70,8 @@ class Practice(Base):
 
 
 def get(practice_id):
-    return jsonify(Practice.query.get(practice_id).serialize())
+    return helpers.get(Practice, practice_id)
 
 
-def search():
-    return jsonify(list(map(lambda x: x.serialize(), Practice.query.all())))
+def search(page, limit):
+    return helpers.search(Practice, page, limit)

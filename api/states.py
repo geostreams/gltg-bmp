@@ -1,8 +1,8 @@
-from flask.json import jsonify
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import Text
 
+from api import helpers
 from api.db import Base
 
 
@@ -38,8 +38,8 @@ class State(Base):
 
 
 def get(state_id):
-    return jsonify(State.query.get(state_id).serialize())
+    return helpers.get(State, state_id)
 
 
-def search():
-    return jsonify(list(map(lambda x: x.serialize(), State.query.all())))
+def search(page, limit):
+    return helpers.search(State, page, limit)
