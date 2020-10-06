@@ -1,23 +1,24 @@
 ### Set up
 
-- Copy `config-example.py` to `instance/config.py` and adjust the config variables for your environment.
-- Create a new Postgres database for the name used in `SQLALCHEMY_DATABASE_URI` in the config file.
+- Copy `.env-example` to `.env` and adjust the config variables for your environment.
+- Create a new Postgres database for the name used in `DATABASE_URI` in the `.env` file.
 The app might work with older versions of PostgreSQL, but it is only tested with version 12.
 - Install the requirements from `requirements.txt`. If you are setting up a development environment, install
 `requirements-dev.txt` too.
+- Before doing any development, run `pre-commit install` to set up the git hooks for the project.
 
 ### Initialize Database
 
-- Download the HUC8 Geodatabase from ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/Hydrography/WBD/National/GDB/,
-unzip the GDB file, and update its path in `INIT_DB["huc8"]` in `config.py` to point to the path you saved the GDB.
-- Download the `practices` spreadsheet and update its path in `INIT_DB["practices"]` in `config.py` to point to the path
-you saved the Excel file.
-- Run `./manage init-db` to populate the database.
+- Download the HUC8 GeoDatabase from ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/Hydrography/WBD/National/GDB/
+and unzip the GDB file in the path mentioned in `CONFIG["huc8"]` in `import_data.py`.
+- Download the `practices` spreadsheet and put it in the path mentioned `CONFIG["practices"]` in `import_data.py`.
+- Run `python import_data.py` to populate the database.
 
-### Use Flask
+### Use Connexion
 
-`./manage`  script is a wrapper for Flask cli, which handles some of the environment variable for Flask.
-All arguments passed to `./manage` get passed to `flask` command directly. This script accepts two flags:
+`./manage` script is a wrapper for Connexion cli.
+It handles some of the environment variable for the Flask server used by Connexion.
+This script accepts two flags:
 `-h` shows help and `-d` calls `flask` with development variables.
 
-In order to run the server in development mode, call `./manage -d run`.
+In order to run the server in development mode, call `./manage -d`.

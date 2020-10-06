@@ -1,6 +1,6 @@
-instance/
 logs/
 resources/
+venv/
 
 .env
 

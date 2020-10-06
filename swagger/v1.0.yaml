@@ -1,0 +1,411 @@
+openapi: 3.0.3
+
+servers:
+  - url: /api/v1.0
+
+info:
+  title: Best Management Practices Portal API
+  version: '1.0'
+
+paths:
+  /assumptions:
+    get:
+      tags:
+        - Assumptions
+      summary: Get all assumptions
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Return assumptions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Assumption'
+
+  '/assumptions/{assumption_id}':
+    get:
+      tags:
+        - Assumptions
+      summary: Get a single assumption
+      parameters:
+        - $ref: '#/components/parameters/assumption_id'
+      responses:
+        '200':
+          description: Return assumption
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assumption'
+        '404':
+          description: Assumption does not exist
+
+  /huc8:
+    get:
+      tags:
+        - HUC8
+      summary: Get all HUC8s
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Return HUC8s
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HUC8'
+
+  '/huc8/{huc8_id}':
+    get:
+      tags:
+        - HUC8
+      summary: Get a single HUC8
+      parameters:
+        - $ref: '#/components/parameters/huc8_id'
+      responses:
+        '200':
+          description: Return HUC8
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HUC8'
+        '404':
+          description: HUC8 does not exist
+
+  /practices:
+    get:
+      tags:
+        - Practices
+      summary: Get all practices
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Return practices
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Practice'
+
+  '/practices/{practice_id}':
+    get:
+      tags:
+        - Practices
+      summary: Get a single practice
+      parameters:
+        - $ref: '#/components/parameters/practice_id'
+      responses:
+        '200':
+          description: Return practice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Practice'
+        '404':
+          description: Practice does not exist
+
+  /states:
+    get:
+      tags:
+        - States
+      summary: Get all states
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Return states
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/State'
+
+  '/states/{state_id}':
+    get:
+      tags:
+        - States
+      summary: Get a single state
+      parameters:
+        - $ref: '#/components/parameters/state_id'
+      responses:
+        '200':
+          description: Return state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+        '404':
+          description: State does not exist
+
+components:
+  parameters:
+    page:
+      name: page
+      description: The page number
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    limit:
+      name: limit
+      description: The number of items per page.
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    assumption_id:
+      name: assumption_id
+      description: Assumption unique identifier
+      in: path
+      required: true
+      schema:
+        type: string
+    huc8_id:
+      name: huc8_id
+      description: HUC8 number
+      in: path
+      required: true
+      schema:
+        type: string
+    practice_id:
+      name: practice_id
+      description: Practice id
+      in: path
+      required: true
+      schema:
+        type: integer
+    state_id:
+      name: state_id
+      description: State name
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        first:
+          type: string
+        last:
+          type: string
+        previous:
+          type: string
+        next:
+          type: string
+    Assumption:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        url:
+          type: string
+        dominant_unit:
+          type: string
+        units:
+          type: string
+        alt_unit_1:
+          type: string
+        alt_unit_2:
+          type: string
+        alt_unit_3:
+          type: string
+        alt_unit_4:
+          type: string
+        alias_1:
+          type: string
+        alias_2:
+          type: string
+        alias_3:
+          type: string
+        alias_4:
+          type: string
+        alias_5:
+          type: string
+        alias_6:
+          type: string
+        alias_7:
+          type: string
+        alias_8:
+          type: string
+        alias_9:
+          type: string
+        alias_10:
+          type: string
+        alias_11:
+          type: string
+        alias_12:
+          type: string
+        alias_13:
+          type: string
+        alias_14:
+          type: string
+        alias_15:
+          type: string
+        alias_16:
+          type: string
+        alias_17:
+          type: string
+        alias_18:
+          type: string
+        alias_19:
+          type: string
+        alias_20:
+          type: string
+        alias_21:
+          type: string
+        alias_22:
+          type: string
+        wq:
+          type: integer
+        wq_benefits:
+          type: string
+        life_span:
+          type: string
+        nitrogen:
+          type: string
+        phosphorus:
+          type: string
+        cost_share_fraction:
+          type: string
+        category:
+          type: string
+        conv:
+          type: string
+        ancillary_benefits:
+          type: string
+
+    HUC8:
+      type: object
+      properties:
+        huc8:
+          type: string
+        name:
+          type: string
+        areaacres:
+          type: string
+        states:
+          type: string
+
+    Practice:
+      type: object
+      properties:
+        id:
+          type: integer
+        huc_8:
+          type: string
+        huc_12:
+          type: string
+        state:
+          type: string
+        county_code:
+          type: string
+        county:
+          type: string
+        nrcs_practice_code:
+          type: string
+        practice_name:
+          type: string
+        program:
+          type: string
+        fund_code:
+          type: string
+        applied_amount:
+          type: number
+        practice_units:
+          type: string
+        applied_date:
+          type: integer
+        funding:
+          type: number
+        sunset:
+          type: integer
+        active_year:
+          type: number
+        category:
+          type: string
+        wq_benefits:
+          type: string
+        area_treated:
+          type: number
+        ancillary_benefits:
+          type: string
+        p_reduction_fraction:
+          type: number
+        n_reduction_fraction:
+          type: number
+        p_reduction_percentage_statewide:
+          type: number
+        n_reduction_percentage_statewide:
+          type: number
+        p_reduction_gom_lbs:
+          type: number
+        n_reduction_gom_lbs:
+          type: number
+
+    State:
+      type: object
+      properties:
+        id:
+          type: string
+        area_sq_mi:
+          type: number
+        size_ac:
+          type: number
+        total_p_load_lbs:
+          type: number
+        total_n_load_lbs:
+          type: number
+        rowcrop_p_yield_lbs_per_ac:
+          type: number
+        rowcrop_n_yield_lbs_per_ac:
+          type: number
+        fraction_p:
+          type: number
+        fraction_n:
+          type: number
+        overall_p_yield_lbs_per_ac:
+          type: number
+        overall_n_yield_lbs_per_ac:
+          type: number
