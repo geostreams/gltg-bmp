@@ -1,10 +1,13 @@
 import subprocess
-from import_data import import_data
+
 from pyclowder.extractors import SimpleExtractor
+
+from import_data import import_data
 
 """
     This is a wrapper class for import_data file to extract practices from file
 """
+
 
 class PracticesExtractor(SimpleExtractor):
     def __init__(self, func):
@@ -13,12 +16,11 @@ class PracticesExtractor(SimpleExtractor):
 
     def process_file(self, input_file):
         self.extraction(input_file)
-        return { 'metadata': {}}
-        
+        return {"metadata": {}}
 
     def process_dataset(self, input_files):
         self.extraction(input_files)
-        return { metadata: {}}
+        return {"metadata": {}}
 
 
 if __name__ == "__main__":
