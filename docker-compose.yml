@@ -3,10 +3,10 @@ version: "3.3"
 services:
 
   api:
-    build: 
+    build:
         context: .
         dockerfile: Dockerfile
-    depends_on: 
+    depends_on:
         - postgres
     networks:
         - bmp
@@ -27,8 +27,8 @@ services:
     environment:
         - POSTGRES_DB=${DB_NAME}
         - POSTGRES_USER=${DB_USER}
-        - POSTGRES_PASSWORD=${DB_PASSWORD} 
-    ports: 
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
         - 5432:5432
     networks:
       - bmp
@@ -184,25 +184,11 @@ services:
           - "traefik.port=9999"
           - "traefik.frontend.rule=${TRAEFIK_FRONTEND_RULE:-}PathPrefixStrip:/monitor"
 
-#   bmp_data_extractor:
-#       image: clowder/pyclowder:onbuild
-#       restart: unless-stopped
-#       networks:
-#           - clowder
-#       depends_on:
-#           - rabbitmq
-#           - clowder
-#       environment:
-#           - MAIN_SCRIPT=bmp_data_extractor.py
-#           - RABBITMQ_URI=${RABBITMQ_URI:-amqp://guest:guest@rabbitmq/%2F}
-#       volumes:
-#           - ./clowder/bmp_data_extractor:/home/clowder
-
   bmp_practices_extractor:
-      build: 
+      build:
           context: clowder/bmp_practices_extractor
           dockerfile: Dockerfile
-      depends_on: 
+      depends_on:
         - rabbitmq
       environment:
         - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
@@ -223,7 +209,7 @@ services:
 
 # ----------------------------------------------------------------------
 # NETWORK FOR CONTAINER COMMUNICATION
-# ----------------------------------------------------------------------  
+# ----------------------------------------------------------------------
 networks:
   bmp:
   clowder:
@@ -238,7 +224,3 @@ volumes:
   mongo:
   rabbitmq:
   elasticsearch:
-
-#configs:
-#  api_config:
-#    file: ./conf/application.conf

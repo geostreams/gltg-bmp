@@ -36,6 +36,7 @@ def clean_column_names(df: pd.DataFrame):
         df.columns.str.strip().str.lower().str.replace(" ", "_").str.replace("[()]", "")
     )
 
+
 def get_huc8_meta():
     print("Getting HUC8 metadata...")
     source_file = CONFIG["boundaries"]["source"]
@@ -59,6 +60,7 @@ def get_huc8_meta():
     )
     return huc8_meta.set_index(huc8_meta["code"]).sort_index().drop("code", axis=1)
 
+
 def get_practices():
     print("Getting practices...")
     practices = pd.read_excel(
@@ -70,6 +72,7 @@ def get_practices():
     print(list(practices))
     print(len(practices))
     return practices
+
 
 def update_practices(
     assumptions: pd.DataFrame,
@@ -290,16 +293,16 @@ def get_huc8_boundaries(practices: pd.DataFrame):
 
 
 def import_data(practices_file_path=None):
-    
-    if(practices_file_path):
-        CONFIG["practices"]["extra_input_args"]["io"]= practices_file_path
+
+    if practices_file_path:
+        CONFIG["practices"]["extra_input_args"]["io"] = practices_file_path
 
     print("Importing data...")
     engine = sqlalchemy.create_engine(CONFIG["database_uri"])
     # Read states and assumptions from database instead of files
-    states = pd.read_sql_table("states", index_col='id', con=engine)
-    assumptions = pd.read_sql_table("assumptions", index_col='id', con=engine)
-    
+    states = pd.read_sql_table("states", index_col="id", con=engine)
+    assumptions = pd.read_sql_table("assumptions", index_col="id", con=engine)
+
     huc8_meta = get_huc8_meta()
     practices = get_practices()
     practices = practices.merge(
@@ -318,7 +321,6 @@ def import_data(practices_file_path=None):
         **CONFIG["practices"]["extra_output_args"]
     )
 
-    
     print("Importing HUC8 boundaries...")
     huc8_boundaries.to_sql(
         "huc8",
