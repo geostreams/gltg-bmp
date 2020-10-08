@@ -2,41 +2,6 @@ version: "3.3"
 
 services:
 
-  api:
-    build:
-        context: .
-        dockerfile: Dockerfile
-    depends_on:
-        - postgres
-    networks:
-        - bmp
-    command:
-        - "./manage -d"
-    environment:
-        - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
-        - DEBUG=${DEBUG}
-        - PORT=8080
-    labels:
-        - "traefik.enable=true"
-        - "traefik.backend=clowder"
-        - "traefik.port=8080"
-        - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: /api/v1.0"
-
-  postgres:
-    image: postgis/postgis:12-3.0-alpine
-    environment:
-        - POSTGRES_DB=${DB_NAME}
-        - POSTGRES_USER=${DB_USER}
-        - POSTGRES_PASSWORD=${DB_PASSWORD}
-    ports:
-        - 5432:5432
-    networks:
-      - bmp
-      - clowder
-    volumes:
-    - postgres:/var/lib/postgresql/data
-    restart: unless-stopped
-
   # ----------------------------------------------------------------------
   # SINGLE ENTRYPOINT
   # ----------------------------------------------------------------------
@@ -68,6 +33,7 @@ services:
       restart: unless-stopped
       networks:
           - clowder
+          - bmp
       ports:
           - "${TRAEFIK_HTTP_PORT-8000}:80"
           - "${TRAEFIK_HTTPS_PORT-8443}:443"
@@ -80,6 +46,44 @@ services:
       volumes:
           - /var/run/docker.sock:/var/run/docker.sock:ro
           - ./traefik:/config
+
+  # ----------------------------------------------------------------------
+  # BMP APPLICATION
+  # ----------------------------------------------------------------------
+  api:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    depends_on:
+        - postgres
+    networks:
+        - bmp
+    command:
+        - "./manage -d"
+    environment:
+        - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+        - DEBUG=${DEBUG}
+        - PORT=8080
+    labels:
+        - "traefik.enable=true"
+        - "traefik.backend=clowder"
+        - "traefik.port=8080"
+        - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: ${API_CONTEXT:-/api}"
+
+  postgres:
+    image: postgis/postgis:12-3.0-alpine
+    environment:
+        - POSTGRES_DB=${DB_NAME}
+        - POSTGRES_USER=${DB_USER}
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+        - 5432:5432
+    networks:
+      - bmp
+      - clowder
+    volumes:
+    - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
 
   # ----------------------------------------------------------------------
   # CLOWDER APPLICATION
@@ -95,6 +99,7 @@ services:
           - rabbitmq
           - mongo
       healthcheck:
+        # Enabling healthcheck gives error with custom context
         disable: true
       environment:
           - CLOWDER_ADMINS=${CLOWDER_ADMINS:-admin@example.com}
@@ -112,7 +117,7 @@ services:
           - "traefik.port=9000"
           - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: ${CLOWDER_CONTEXT:-/}"
       volumes:
-        - clowder-custom:/home/clowder/custom
+        - ./clowder-custom:/home/clowder/custom
         - ./clowder/volumes/clowder/data:/home/clowder/data
 
   # ----------------------------------------------------------------------
@@ -183,13 +188,16 @@ services:
           - "traefik.backend=monitor"
           - "traefik.port=9999"
           - "traefik.frontend.rule=${TRAEFIK_FRONTEND_RULE:-}PathPrefixStrip:/monitor"
-
+  # ----------------------------------------------------------------------
+  # CLOWDER EXTRACTORS
+  # ----------------------------------------------------------------------
   bmp_practices_extractor:
       build:
           context: clowder/bmp_practices_extractor
           dockerfile: Dockerfile
       depends_on:
         - rabbitmq
+        - monitor
       environment:
         - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
         - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672/%2F
