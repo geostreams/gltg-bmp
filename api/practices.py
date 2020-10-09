@@ -2,6 +2,7 @@ from sqlalchemy import BigInteger
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import JSON
+from sqlalchemy import or_
 from sqlalchemy import Text
 
 from api import helpers
@@ -73,5 +74,27 @@ def get(practice_id):
     return helpers.get(Practice, practice_id)
 
 
-def search(page, limit):
-    return helpers.search(Practice, page, limit)
+def search(page, limit, **filters):
+    query_filters_config = {
+        "huc8s": ("huc_8", "in_", filters.get("huc8s")),
+        "states": ("state", "in_", filters.get("states")),
+        "practice_code": ("nrcs_practice_code", "__eq__", filters.get("practice_code")),
+        "applied_date": (
+            or_,
+            (
+                ("applied_date", "__ge__", filters.get("applied_date")),
+                ("applied_date", "is_", None),
+            ),
+        ),
+        "sunset": (
+            or_,
+            (("sunset", "__le__", filters.get("sunset")), ("sunset", "is_", None)),
+        ),
+    }
+
+    return helpers.search(
+        Practice,
+        page,
+        limit,
+        [v for k, v in query_filters_config.items() if filters.get(k)],
+    )

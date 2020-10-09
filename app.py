@@ -12,6 +12,8 @@ DEBUG = os.getenv("DEBUG", False)
 
 # Logging
 logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")))
+if DEBUG:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 # DB
 db_session = get_db(os.getenv("DATABASE_URI"))
