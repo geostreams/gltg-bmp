@@ -15,3 +15,6 @@ COPY ./app.py /home/bmp-api
 RUN ls
 
 ENV FLASK_APP=app.py
+
+ENTRYPOINT [ "./manage" ]
+CMD ["-d"]

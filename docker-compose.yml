@@ -58,15 +58,16 @@ services:
         - postgres
     networks:
         - bmp
-    command:
-        - "./manage -d"
     environment:
         - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
         - DEBUG=${DEBUG}
         - PORT=8080
+    volumes:
+    - ./app.py:/home/bmp-api/app.py
+    - ./api:/home/bmp-api/api/
     labels:
         - "traefik.enable=true"
-        - "traefik.backend=clowder"
+        - "traefik.backend=api"
         - "traefik.port=8080"
         - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: ${API_CONTEXT:-/api}"
 
@@ -117,7 +118,7 @@ services:
           - "traefik.port=9000"
           - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: ${CLOWDER_CONTEXT:-/}"
       volumes:
-        - ./clowder-custom:/home/clowder/custom
+        - clowder-custom:/home/clowder/custom
         - ./clowder/volumes/clowder/data:/home/clowder/data
 
   # ----------------------------------------------------------------------
