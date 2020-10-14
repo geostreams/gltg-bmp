@@ -4,12 +4,13 @@ from typing import cast
 from typing import Iterable
 from typing import List
 from typing import Tuple
+from typing import TypedDict
 from typing import Union
 
 from connexion import request
-from flask import jsonify
 from sqlalchemy import and_
 from sqlalchemy import or_
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import BinaryExpression
 
 from api.db import Base
@@ -20,6 +21,15 @@ BasicQueryFilterConfig = Tuple[ColumnName, Expression, Any]
 QueryFilterConfig = Union[
     BasicQueryFilterConfig, Tuple[Union[and_, or_], Iterable["QueryFilterConfig"]]
 ]
+
+
+class SearchResults(TypedDict):
+    count: int
+    first: str
+    last: str
+    previous: Union[str, None]
+    next: Union[str, None]
+    results: Iterable[Base]
 
 
 def process_query_filters(
@@ -35,8 +45,8 @@ def process_query_filters(
         return getattr(getattr(model, key), op)(value)
 
 
-def get(model: Base, query_id: Union[str, int]):
-    return jsonify(model.query.get(query_id).serialize())
+def get(model: Base, query_id: Union[str, int]) -> Base:
+    return model.query.get(query_id)
 
 
 def search(
@@ -44,13 +54,16 @@ def search(
     page: int,
     limit: int,
     query_filters_config: Iterable[QueryFilterConfig] = (),
-) -> dict:
+    columns: Iterable[InstrumentedAttribute] = (),
+) -> SearchResults:
     """
-    :param model: A SQLAlchemy model
-    :param page: The page number in the query result
-    :param limit: Number of items per page
+    :param model: A SQLAlchemy model.
+    :param page: The page number in the query result.
+    :param limit: Number of items per page.
     :param query_filters_config: An iterable of filters to apply to the query
-           (see `QueryFilterConfig` for the structure of the iterable items)
+           (see `QueryFilterConfig` for the structure of the iterable items).
+    :param columns: List of columns to include in the query results. If it's empty, then all columns will be included.
+    :return a dict object in shape of `SearchResult` type.
     """
     query_filters: List[BinaryExpression] = []
 
@@ -58,6 +71,10 @@ def search(
         query_filters.append(process_query_filters(model, query_filter_config))
 
     query = model.query.filter(*query_filters)
+
+    if columns:
+        query = query.with_entities(*columns)
+
     count = query.count()
     total_pages = math.ceil(count / limit)
 
@@ -71,18 +88,11 @@ def search(
     if page * limit < count:
         next_url = f"{request.base_url}?page={page + 1}&limit={limit}"
 
-    return jsonify(
-        {
-            "count": count,
-            "first": f"{request.base_url}?page=1&limit={limit}",
-            "last": f"{request.base_url}?page={total_pages}&limit={limit}",
-            "previous": previous_url,
-            "next": next_url,
-            "results": list(
-                map(
-                    lambda x: x.serialize(),
-                    query.limit(limit).offset((page - 1) * limit).all(),
-                )
-            ),
-        }
-    )
+    return {
+        "count": count,
+        "first": f"{request.base_url}?page=1&limit={limit}",
+        "last": f"{request.base_url}?page={total_pages}&limit={limit}",
+        "previous": previous_url,
+        "next": next_url,
+        "results": query.limit(limit).offset((page - 1) * limit).all(),
+    }

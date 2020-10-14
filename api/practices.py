@@ -1,3 +1,4 @@
+from flask import jsonify
 from sqlalchemy import BigInteger
 from sqlalchemy import Column
 from sqlalchemy import Float
@@ -39,39 +40,9 @@ class Practice(Base):
     p_reduction_gom_lbs = Column(Float(53))
     n_reduction_gom_lbs = Column(Float(53))
 
-    def serialize(self):
-        return {
-            "id": self.id,
-            "huc_8": self.huc_8,
-            "huc_12": self.huc_12,
-            "state": self.state,
-            "county_code": self.county_code,
-            "county": self.county,
-            "nrcs_practice_code": self.nrcs_practice_code,
-            "practice_name": self.practice_name,
-            "program": self.program,
-            "fund_code": self.fund_code,
-            "applied_amount": self.applied_amount,
-            "practice_units": self.practice_units,
-            "applied_date": self.applied_date,
-            "funding": self.funding,
-            "sunset": self.sunset,
-            "active_year": self.active_year,
-            "category": self.category,
-            "wq_benefits": self.wq_benefits,
-            "area_treated": self.area_treated,
-            "ancillary_benefits": self.ancillary_benefits,
-            "p_reduction_fraction": self.p_reduction_fraction,
-            "n_reduction_fraction": self.n_reduction_fraction,
-            "p_reduction_percentage_statewide": self.p_reduction_percentage_statewide,
-            "n_reduction_percentage_statewide": self.n_reduction_percentage_statewide,
-            "p_reduction_gom_lbs": self.p_reduction_gom_lbs,
-            "n_reduction_gom_lbs": self.n_reduction_gom_lbs,
-        }
-
 
 def get(practice_id):
-    return helpers.get(Practice, practice_id)
+    return jsonify(helpers.get(Practice, practice_id))
 
 
 def search(page, limit, **filters):
@@ -90,11 +61,33 @@ def search(page, limit, **filters):
             or_,
             (("sunset", "__le__", filters.get("sunset")), ("sunset", "is_", None)),
         ),
+        "program": ("program", "__eq__", filters.get("program")),
+        "min_applied_amount": (
+            "applied_amount",
+            "__ge__",
+            filters.get("min_applied_amount"),
+        ),
+        "max_applied_amount": (
+            "applied_amount",
+            "__le__",
+            filters.get("max_applied_amount"),
+        ),
+        "category": ("category", "__eq__", filters.get("category")),
+        "wq_benefits": ("wq_benefits", "__eq__", filters.get("wq_benefits")),
+        "ancillary_benefits": (
+            "ancillary_benefits",
+            "__in__",
+            filters.get("ancillary_benefits"),
+        ),
+        "min_area_treated": ("area_treated", "__ge__", filters.get("min_area_treated")),
+        "max_area_treated": ("area_treated", "__le__", filters.get("max_area_treated")),
     }
 
-    return helpers.search(
-        Practice,
-        page,
-        limit,
-        [v for k, v in query_filters_config.items() if filters.get(k)],
+    return jsonify(
+        helpers.search(
+            Practice,
+            page,
+            limit,
+            [v for k, v in query_filters_config.items() if filters.get(k)],
+        )
     )

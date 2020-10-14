@@ -3,7 +3,9 @@ import os
 
 import connexion
 from dotenv import load_dotenv
+from flask import Flask
 
+from api.db import AlchemyEncoder
 from api.db import get_db
 
 # Load environment variables from .env
@@ -26,7 +28,8 @@ app = connexion.FlaskApp(
 )
 app.add_api("v1.0.yaml", strict_validation=True, options={"swagger_url": "/docs"})
 
-application = app.app
+application: Flask = app.app
+application.json_encoder = AlchemyEncoder
 
 
 @application.teardown_appcontext
