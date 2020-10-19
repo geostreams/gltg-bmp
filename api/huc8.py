@@ -26,4 +26,8 @@ def get(huc8_id):
 
 
 def search(page, limit):
-    return jsonify(helpers.search(HUC8, page, limit))
+    return jsonify(
+        helpers.search(
+            HUC8, page, limit, [], [HUC8.huc8, HUC8.name, HUC8.area_acres, HUC8.states]
+        )
+    )
