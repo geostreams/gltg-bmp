@@ -1,0 +1,24 @@
+{
+  "@context": "http://clowder.ncsa.illinois.edu/contexts/extractors.jsonld",
+  "name": "bmp.practices-extractor",
+  "version": "1.0",
+  "description": "Best Management Practices Extractor. Extract practices from file and add to bmp database",
+  "author": "Aaraj Habib <aarajh@illinois.edu>",
+  "contributors": [],
+  "contexts": [],
+  "repository": [
+    {
+      "repType": "git",
+      "repUrl": "https://github.com/geostreams/gltg-bmp.git"
+    }
+  ],
+  "process": {
+    "file": [
+      "text/csv",
+      "application/excel"
+    ]
+  },
+  "external_services": [],
+  "dependencies": [],
+  "bibtex": []
+}

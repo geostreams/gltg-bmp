@@ -1,11 +1,16 @@
+# Local Folders
 logs/
 resources/
-venv/
+volumes/
+traefik/
+clowder-data/
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+
+# Environments
 .env
-
-clowder/volumes/*
-!clowder/volumes/clowder/
-
-clowder/volumes/clowder/*
-!clowder/volumes/clowder/custom/
+.venv
