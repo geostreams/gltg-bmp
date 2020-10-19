@@ -1,6 +1,5 @@
 import json
 import os
-from functools import reduce
 
 import geopandas as gpd
 import pandas as pd

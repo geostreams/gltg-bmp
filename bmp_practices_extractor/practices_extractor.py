@@ -1,5 +1,3 @@
-import subprocess
-
 from pyclowder.extractors import SimpleExtractor
 
 from import_data import import_data
