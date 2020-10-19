@@ -99,9 +99,6 @@ services:
       depends_on:
           - rabbitmq
           - mongo
-      healthcheck:
-        # Enabling healthcheck gives error with custom context
-        disable: true
       environment:
           - CLOWDER_ADMINS=${CLOWDER_ADMINS:-admin@example.com}
           - CLOWDER_REGISTER=${CLOWDER_REGISTER:-false}
@@ -118,8 +115,7 @@ services:
           - "traefik.port=9000"
           - "traefik.frontend.rule=${TRAEFIK_HOST:-}PathPrefix: ${CLOWDER_CONTEXT:-/}"
       volumes:
-        - clowder-custom:/home/clowder/custom
-        - ./clowder/volumes/clowder/data:/home/clowder/data
+        - ./clowder-data:/home/clowder/data
 
   # ----------------------------------------------------------------------
   # CLOWDER DEPENDENCIES
@@ -189,6 +185,7 @@ services:
           - "traefik.backend=monitor"
           - "traefik.port=9999"
           - "traefik.frontend.rule=${TRAEFIK_FRONTEND_RULE:-}PathPrefixStrip:/monitor"
+
   # ----------------------------------------------------------------------
   # CLOWDER EXTRACTORS
   # ----------------------------------------------------------------------
@@ -203,10 +200,6 @@ services:
         - DATABASE_URI=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
         - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672/%2F
         - RABBITMQ_EXCHANGE=clowder
-        - EMAIL_SENDER="extractor"
-        - DEBUG=true
-        - PORT=8000
-        - LOG_LEVEL=INFO
 
       restart: unless-stopped
       networks:
@@ -227,7 +220,6 @@ networks:
 # VOLUMES FOR PERSISTENT STORAGE
 # ----------------------------------------------------------------------
 volumes:
-  clowder-custom:
   postgres:
   traefik:
   mongo:
