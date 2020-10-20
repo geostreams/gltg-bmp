@@ -1,20 +1,15 @@
 import json
 import os
-from functools import reduce
 
 import geopandas as gpd
 import pandas as pd
 import sqlalchemy
-from dotenv import load_dotenv
 from geoalchemy2 import Geometry
 from geoalchemy2 import WKTElement
-
-load_dotenv()
 
 CONFIG = {
     "database_uri": os.getenv("DATABASE_URI"),
     "boundaries": {"source": "./data/boundaries.xlsx"},
-    "assumptions": {"source": "./data/assumptions.xlsx"},
     "practices": {
         "extra_input_args": {
             "io": "./resources/1_EQIP_CSP_319 Practices 2008_2017_2.3.1.xlsm",
@@ -41,30 +36,6 @@ def clean_column_names(df: pd.DataFrame):
     )
 
 
-def get_states():
-    print("Getting States...")
-    source_file = CONFIG["boundaries"]["source"]
-    states = pd.read_excel(
-        source_file,
-        sheet_name="States",
-        dtype={
-            "state": "str",
-            "area_sq_mi": "float64",
-            "size_ac": "float64",
-            "total_p_load_lbs": "float64",
-            "total_n_load_lbs": "float64",
-            "rowcrop_p_yield_lbs_per_ac": "float64",
-            "rowcrop_n_yield_lbs_per_ac": "float64",
-            "fraction_p": "float64",
-            "fraction_n": "float64",
-            "overall_p_yield_lbs_per_ac": "float64",
-            "overall_n_yield_lbs_per_ac": "float64",
-        },
-    )
-
-    return states.set_index(states["state"]).sort_index().drop("state", axis=1)
-
-
 def get_huc8_meta():
     print("Getting HUC8 metadata...")
     source_file = CONFIG["boundaries"]["source"]
@@ -89,42 +60,6 @@ def get_huc8_meta():
     return huc8_meta.set_index(huc8_meta["code"]).sort_index().drop("code", axis=1)
 
 
-def get_assumptions():
-    print("Getting assumptions...")
-    source_file = CONFIG["assumptions"]["source"]
-    assumptions = pd.read_excel(source_file, sheet_name="Practices", dtype="str")
-    assumptions["wq"] = pd.to_numeric(assumptions["wq"]).astype("Int64")
-    assumptions = (
-        assumptions.set_index(assumptions["code"]).sort_index().drop("code", axis=1)
-    )
-
-    def join_json_columns(main: pd.DataFrame, sheet_info: (str, str)):
-        (sheet_name, column_name) = sheet_info
-
-        sheet = pd.read_excel(source_file, sheet_name=sheet_name, dtype="str")
-        sheet = (
-            sheet.set_index(sheet["code"]).sort_index().drop("code", axis=1).fillna("")
-        )
-        sheet[column_name] = sheet.apply(lambda row: row.to_dict(), axis=1)
-
-        return main.join(sheet[column_name], on="code")
-
-    return reduce(
-        join_json_columns,
-        (
-            ("Water Quality Benefits", "wq_benefits"),
-            ("Life Span", "life_span"),
-            ("N Red", "nitrogen"),
-            ("P Red", "phosphorus"),
-            ("Cost Share Fraction", "cost_share_fraction"),
-            ("Category", "category"),
-            ("Practice Conv", "conv"),
-            ("Ancillary Benefits", "ancillary_benefits"),
-        ),
-        assumptions,
-    )
-
-
 def get_practices():
     print("Getting practices...")
     practices = pd.read_excel(
@@ -133,6 +68,8 @@ def get_practices():
     practices.index += 1
     practices.columns = clean_column_names(practices)
 
+    print(list(practices))
+    print(len(practices))
     return practices
 
 
@@ -354,11 +291,18 @@ def get_huc8_boundaries(practices: pd.DataFrame):
     return huc8
 
 
-def import_data():
+def import_data(practices_file_path=None):
+
+    if practices_file_path:
+        CONFIG["practices"]["extra_input_args"]["io"] = practices_file_path
+
     print("Importing data...")
-    states = get_states()
+    engine = sqlalchemy.create_engine(CONFIG["database_uri"])
+    # Read states and assumptions from database instead of files
+    states = pd.read_sql_table("states", index_col="id", con=engine)
+    assumptions = pd.read_sql_table("assumptions", index_col="id", con=engine)
+
     huc8_meta = get_huc8_meta()
-    assumptions = get_assumptions()
     practices = get_practices()
     practices = practices.merge(
         update_practices(assumptions, states, huc8_meta, practices),
@@ -366,29 +310,6 @@ def import_data():
         right_index=True,
     )
     huc8_boundaries = get_huc8_boundaries(practices)
-
-    engine = sqlalchemy.create_engine(CONFIG["database_uri"])
-
-    print("Importing states...")
-    states.to_sql("states", con=engine, index_label="id", if_exists="replace")
-
-    print("Importing assumptions...")
-    assumptions.to_sql(
-        "assumptions",
-        con=engine,
-        index_label="id",
-        if_exists="replace",
-        dtype={
-            "wq_benefits": sqlalchemy.types.JSON,
-            "life_span": sqlalchemy.types.JSON,
-            "nitrogen": sqlalchemy.types.JSON,
-            "phosphorus": sqlalchemy.types.JSON,
-            "cost_share_fraction": sqlalchemy.types.JSON,
-            "category": sqlalchemy.types.JSON,
-            "conv": sqlalchemy.types.JSON,
-            "ancillary_benefits": sqlalchemy.types.JSON,
-        },
-    )
 
     print("Importing practices...")
     practices.to_sql(
