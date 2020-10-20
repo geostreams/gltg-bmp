@@ -5,6 +5,7 @@ import os
 import connexion
 from dotenv import load_dotenv
 from flask import Flask
+from flask_cors import CORS
 from sqlalchemy import func
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
@@ -31,6 +32,7 @@ app = connexion.FlaskApp(
 app.add_api("v1.0.yaml", strict_validation=True, options={"swagger_url": "/docs"})
 
 application: Flask = app.app
+CORS(application)
 
 
 class AlchemyEncoder(json.JSONEncoder):
