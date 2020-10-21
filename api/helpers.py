@@ -60,6 +60,7 @@ def search(
     :param model: A SQLAlchemy model.
     :param page: The page number in the query result.
     :param limit: Number of items per page.
+                  If limit is less than 1, then all the items matching the query will be returned.
     :param query_filters_config: An iterable of filters to apply to the query
            (see `QueryFilterConfig` for the structure of the iterable items).
     :param columns: List of columns to include in the query results. If it's empty, then all columns will be included.
@@ -76,6 +77,10 @@ def search(
         query = query.with_entities(*columns)
 
     count = query.count()
+
+    if limit < 1:
+        limit = count
+
     total_pages = math.ceil(count / limit)
 
     previous_url = None
@@ -88,11 +93,21 @@ def search(
     if page * limit < count:
         next_url = f"{request.base_url}?page={page + 1}&limit={limit}"
 
+    def query_list_to_dict(items):
+        out = {}
+        for i, c in enumerate(columns):
+            out[c.key] = items[i]
+        return out
+
+    results = query.limit(limit).offset((page - 1) * limit).all()
+    if columns:
+        results = list(map(lambda items: query_list_to_dict(items), results))
+
     return {
         "count": count,
         "first": f"{request.base_url}?page=1&limit={limit}",
         "last": f"{request.base_url}?page={total_pages}&limit={limit}",
         "previous": previous_url,
         "next": next_url,
-        "results": query.limit(limit).offset((page - 1) * limit).all(),
+        "results": results,
     }

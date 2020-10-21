@@ -216,12 +216,11 @@ components:
         default: 1
     limit:
       name: limit
-      description: The number of items per page.
+      description: The number of items per page. If limit is less than 1, then all the items matching the query will be returned.
       in: query
       required: false
       schema:
         type: integer
-        minimum: 1
         default: 20
     huc8s:
       name: huc8s
