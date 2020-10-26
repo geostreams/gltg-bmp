@@ -37,7 +37,12 @@ paths:
         - Assumptions
       summary: Get a single assumption
       parameters:
-        - $ref: '#/components/parameters/assumption_id'
+        - name: assumption_id
+          description: Assumption unique identifier
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Return assumption
@@ -77,7 +82,12 @@ paths:
         - HUC8
       summary: Get a single HUC8
       parameters:
-        - $ref: '#/components/parameters/huc8_id'
+        - name: huc8_id
+          description: HUC8 number
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Return HUC8
@@ -96,6 +106,21 @@ paths:
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/huc8s'
+        - $ref: '#/components/parameters/states'
+        - $ref: '#/components/parameters/practice_code'
+        - $ref: '#/components/parameters/applied_date'
+        - $ref: '#/components/parameters/sunset'
+        - $ref: '#/components/parameters/program'
+        - $ref: '#/components/parameters/min_applied_amount'
+        - $ref: '#/components/parameters/max_applied_amount'
+        - $ref: '#/components/parameters/category'
+        - $ref: '#/components/parameters/wq_benefits'
+        - $ref: '#/components/parameters/ancillary_benefits'
+        - $ref: '#/components/parameters/min_area_treated'
+        - $ref: '#/components/parameters/max_area_treated'
+        - $ref: '#/components/parameters/nutrient_type'
+        - $ref: '#/components/parameters/value_type'
       responses:
         '200':
           description: Return practices
@@ -117,7 +142,12 @@ paths:
         - Practices
       summary: Get a single practice
       parameters:
-        - $ref: '#/components/parameters/practice_id'
+        - name: practice_id
+          description: Practice id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
         '200':
           description: Return practice
@@ -157,7 +187,12 @@ paths:
         - States
       summary: Get a single state
       parameters:
-        - $ref: '#/components/parameters/state_id'
+        - name: state_id
+          description: State name
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Return state
@@ -181,39 +216,120 @@ components:
         default: 1
     limit:
       name: limit
-      description: The number of items per page.
+      description: The number of items per page. If limit is less than 1, then all the items matching the query will be returned.
       in: query
       required: false
       schema:
         type: integer
-        minimum: 1
         default: 20
-    assumption_id:
-      name: assumption_id
-      description: Assumption unique identifier
-      in: path
-      required: true
+    huc8s:
+      name: huc8s
+      description: HUC8 codes
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    states:
+      name: states
+      description: State names
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    practice_code:
+      name: practice_code
+      description: Practice code
+      in: query
+      required: false
       schema:
         type: string
-    huc8_id:
-      name: huc8_id
-      description: HUC8 number
-      in: path
-      required: true
-      schema:
-        type: string
-    practice_id:
-      name: practice_id
-      description: Practice id
-      in: path
-      required: true
+    applied_date:
+      name: applied_date
+      description: Practice applied date
+      in: query
+      required: false
       schema:
         type: integer
-    state_id:
-      name: state_id
-      description: State name
-      in: path
-      required: true
+    sunset:
+      name: sunset
+      description: Practice sunset
+      in: query
+      required: false
+      schema:
+        type: integer
+    program:
+      name: program
+      description: Practice program
+      in: query
+      required: false
+      schema:
+        type: string
+    min_applied_amount:
+      name: min_applied_amount
+      description: Practice minimum applied amount
+      in: query
+      required: false
+      schema:
+        type: number
+    max_applied_amount:
+      name: max_applied_amount
+      description: Practice maximum applied amount
+      in: query
+      required: false
+      schema:
+        type: number
+    category:
+      name: category
+      description: Practice category
+      in: query
+      required: false
+      schema:
+        type: string
+    wq_benefits:
+      name: wq_benefits
+      description: Practice water quality benefits
+      in: query
+      required: false
+      schema:
+        type: string
+    ancillary_benefits:
+      name: ancillary_benefits
+      description: Practice ancillary benefits
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    min_area_treated:
+      name: min_area_treated
+      description: Practice minimum area treated
+      in: query
+      required: false
+      schema:
+        type: number
+    max_area_treated:
+      name: max_area_treated
+      description: Practice maximum area treated
+      in: query
+      required: false
+      schema:
+        type: number
+    nutrient_type:
+      name: nutrient_type
+      description: Practice nutrient type
+      in: query
+      required: false
+      schema:
+        type: string
+    value_type:
+      name: value_type
+      description: Practice value type
+      in: query
       schema:
         type: string
 

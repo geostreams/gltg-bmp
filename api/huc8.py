@@ -1,3 +1,4 @@
+from flask import jsonify
 from geoalchemy2 import Geometry
 from sqlalchemy import Column
 from sqlalchemy import Float
@@ -19,18 +20,14 @@ class HUC8(Base):
         index=True,
     )
 
-    def serialize(self):
-        return {
-            "huc8": self.huc8,
-            "name": self.name,
-            "area_acres": self.area_acres,
-            "states": self.states,
-        }
-
 
 def get(huc8_id):
-    return helpers.get(HUC8, huc8_id)
+    return jsonify(helpers.get(HUC8, huc8_id))
 
 
 def search(page, limit):
-    return helpers.search(HUC8, page, limit)
+    return jsonify(
+        helpers.search(
+            HUC8, page, limit, [], [HUC8.huc8, HUC8.name, HUC8.area_acres, HUC8.states]
+        )
+    )
