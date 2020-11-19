@@ -106,6 +106,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/group_by'
+        - $ref: '#/components/parameters/aggregates'
         - $ref: '#/components/parameters/huc8s'
         - $ref: '#/components/parameters/states'
         - $ref: '#/components/parameters/practice_code'
@@ -332,6 +334,23 @@ components:
       in: query
       schema:
         type: string
+    # The following is used for processing data, e.g. grouping by a column and applying statistical functions
+    group_by:
+      name: group_by
+      description: List of columns to group the query with
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+    aggregates:
+      name: aggregates
+      description: The type of aggregation to apply to the query, e.g. count and sum
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
 
   schemas:
     Pagination:

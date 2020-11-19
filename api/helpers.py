@@ -3,12 +3,14 @@ from typing import Any
 from typing import cast
 from typing import Iterable
 from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import TypedDict
 from typing import Union
 
 from connexion import request
 from sqlalchemy import and_
+from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import BinaryExpression
@@ -27,8 +29,8 @@ class SearchResults(TypedDict):
     count: int
     first: str
     last: str
-    previous: Union[str, None]
-    next: Union[str, None]
+    previous: Optional[str]
+    next: Optional[str]
     results: Iterable[Base]
 
 
@@ -55,6 +57,8 @@ def search(
     limit: int,
     query_filters_config: Iterable[QueryFilterConfig] = (),
     columns: Iterable[InstrumentedAttribute] = (),
+    group_by: Iterable[str] = (),
+    aggregates: Iterable[str] = (),
 ) -> SearchResults:
     """
     :param model: A SQLAlchemy model.
@@ -64,6 +68,9 @@ def search(
     :param query_filters_config: An iterable of filters to apply to the query
            (see `QueryFilterConfig` for the structure of the iterable items).
     :param columns: List of columns to include in the query results. If it's empty, then all columns will be included.
+    :param group_by: List of columns to group the query by.
+    :param aggregates: List of aggregate function to apply to a column. Each item must be a string in the following
+           format: `<column-name>-<aggregate_function>`.
     :return a dict object in shape of `SearchResult` type.
     """
     query_filters: List[BinaryExpression] = []
@@ -71,10 +78,25 @@ def search(
     for query_filter_config in query_filters_config:
         query_filters.append(process_query_filters(model, query_filter_config))
 
-    query = model.query.filter(*query_filters)
+    session = model.query.session
+
+    if group_by:
+        columns = list(map(lambda c: getattr(model, c), group_by))
+        for aggregate in aggregates:
+            (column, agg_func) = aggregate.split("-")
+            columns.append(
+                getattr(func, agg_func)(getattr(model, column)).label(agg_func)
+            )
 
     if columns:
-        query = query.with_entities(*columns)
+        query = session.query(*columns)
+    else:
+        query = session.query(model)
+
+    if group_by:
+        query = query.group_by(*group_by)
+
+    query = query.filter(*query_filters)
 
     count = query.count()
 

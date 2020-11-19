@@ -370,7 +370,9 @@ def import_data():
     engine = sqlalchemy.create_engine(CONFIG["database_uri"])
 
     print("Importing states...")
-    states.to_sql("states", con=engine, index_label="id", if_exists="replace")
+    states[states.index.isin(practices["state"])].to_sql(
+        "states", con=engine, index_label="id", if_exists="replace"
+    )
 
     print("Importing assumptions...")
     assumptions.to_sql(

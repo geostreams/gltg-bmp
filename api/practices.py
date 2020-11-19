@@ -45,7 +45,7 @@ def get(practice_id):
     return jsonify(helpers.get(Practice, practice_id))
 
 
-def search(page, limit, **filters):
+def search(page, limit, group_by=(), aggregates=(), **filters):
     query_filters_config = {
         "huc8s": ("huc_8", "in_", filters.get("huc8s")),
         "states": ("state", "in_", filters.get("states")),
@@ -89,5 +89,7 @@ def search(page, limit, **filters):
             page,
             limit,
             [v for k, v in query_filters_config.items() if filters.get(k)],
+            group_by=group_by,
+            aggregates=aggregates,
         )
     )
