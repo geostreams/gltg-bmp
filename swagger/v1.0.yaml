@@ -108,8 +108,9 @@ paths:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/group_by'
         - $ref: '#/components/parameters/aggregates'
-        - $ref: '#/components/parameters/huc8s'
-        - $ref: '#/components/parameters/states'
+        - $ref: '#/components/parameters/order_by'
+        - $ref: '#/components/parameters/huc_8'
+        - $ref: '#/components/parameters/state'
         - $ref: '#/components/parameters/practice_code'
         - $ref: '#/components/parameters/applied_date'
         - $ref: '#/components/parameters/sunset'
@@ -224,8 +225,8 @@ components:
       schema:
         type: integer
         default: 20
-    huc8s:
-      name: huc8s
+    huc_8:
+      name: huc_8
       description: HUC8 codes
       in: query
       required: false
@@ -233,8 +234,8 @@ components:
         type: array
         items:
           type: string
-    states:
-      name: states
+    state:
+      name: state
       description: State names
       in: query
       required: false
@@ -346,6 +347,16 @@ components:
     aggregates:
       name: aggregates
       description: The type of aggregation to apply to the query, e.g. count and sum
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+    order_by:
+      name: order_by
+      description: List of columns to order the query by.
+                   Column names must be prepended with + or -,
+                   indicating whether to sort them in ascending or descending order respectively.
       in: query
       schema:
         type: array

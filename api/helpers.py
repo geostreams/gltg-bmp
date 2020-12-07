@@ -10,6 +10,8 @@ from typing import Union
 
 from connexion import request
 from sqlalchemy import and_
+from sqlalchemy import asc
+from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -59,6 +61,7 @@ def search(
     columns: Iterable[InstrumentedAttribute] = (),
     group_by: Iterable[str] = (),
     aggregates: Iterable[str] = (),
+    order_by: Iterable[str] = (),
 ) -> SearchResults:
     """
     :param model: A SQLAlchemy model.
@@ -71,6 +74,9 @@ def search(
     :param group_by: List of columns to group the query by.
     :param aggregates: List of aggregate function to apply to a column. Each item must be a string in the following
            format: `<column-name>-<aggregate_function>`.
+    :param order_by: List of columns to order the query by.
+           Column names must be prepended with + or -, indicating whether to sort them in ascending or descending
+           order respectively.
     :return a dict object in shape of `SearchResult` type.
     """
     query_filters: List[BinaryExpression] = []
@@ -80,13 +86,14 @@ def search(
 
     session = model.query.session
 
+    dynamic_columns = {}
     if group_by:
         columns = list(map(lambda c: getattr(model, c), group_by))
         for aggregate in aggregates:
-            (column, agg_func) = aggregate.split("-")
-            columns.append(
-                getattr(func, agg_func)(getattr(model, column)).label(agg_func)
-            )
+            (column_name, agg_func) = aggregate.split("-")
+            column = getattr(func, agg_func)(getattr(model, column_name))
+            columns.append(column.label(aggregate))
+            dynamic_columns[aggregate] = column
 
     if columns:
         query = session.query(*columns)
@@ -95,6 +102,26 @@ def search(
 
     if group_by:
         query = query.group_by(*group_by)
+
+    if order_by:
+        order_by_args = []
+
+        for column_order in order_by:
+            if column_order[0] == "-":
+                column_name = column_order[1:]
+                order_func = desc
+            else:
+                column_name = column_order
+                order_func = asc
+
+            if column_name in dynamic_columns:
+                column = dynamic_columns[column_name]
+            else:
+                column = getattr(model, column_name)
+
+            order_by_args.append(order_func(column))
+
+        query = query.order_by(*order_by_args)
 
     query = query.filter(*query_filters)
 
