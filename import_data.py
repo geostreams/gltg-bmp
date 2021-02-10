@@ -329,6 +329,7 @@ def update_practices(
     )
     calculated_columns.index += 1
 
+    if not os.path.exists("./logs"): os.makedirs("./logs")
     with open("./logs/missing_huc8.json", "w+") as f:
         f.write(json.dumps(list(missing_huc8), indent=2))
 
