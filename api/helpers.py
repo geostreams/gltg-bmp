@@ -86,14 +86,17 @@ def search(
 
     session = model.query.session
 
+    columns = list(columns)
     dynamic_columns = {}
+
     if group_by:
-        columns = list(map(lambda c: getattr(model, c), group_by))
-        for aggregate in aggregates:
-            (column_name, agg_func) = aggregate.split("-")
-            column = getattr(func, agg_func)(getattr(model, column_name))
-            columns.append(column.label(aggregate))
-            dynamic_columns[aggregate] = column
+        columns = columns + list(map(lambda c: getattr(model, c), group_by))
+
+    for aggregate in aggregates:
+        (column_name, agg_func) = aggregate.split("-")
+        column = getattr(func, agg_func)(getattr(model, column_name))
+        columns.append(column.label(aggregate))
+        dynamic_columns[aggregate] = column
 
     if columns:
         query = session.query(*columns)
