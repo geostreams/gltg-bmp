@@ -1,4 +1,5 @@
 from flask import jsonify
+from sqlalchemy import and_
 from sqlalchemy import BigInteger
 from sqlalchemy import Column
 from sqlalchemy import Float
@@ -45,7 +46,16 @@ def get(practice_id):
     return jsonify(helpers.get(Practice, practice_id))
 
 
-def search(page, limit, group_by=(), aggregates=(), order_by=(), **filters):
+def search(
+    page,
+    limit,
+    group_by=(),
+    aggregates=(),
+    partitions=(),
+    partition_size=0,
+    order_by=(),
+    **filters
+):
     query_filters_config = {
         "huc_8": ("huc_8", "in_", filters.get("huc_8")),
         "state": ("state", "in_", filters.get("state")),
@@ -79,18 +89,34 @@ def search(page, limit, group_by=(), aggregates=(), order_by=(), **filters):
             "__in__",
             filters.get("ancillary_benefits"),
         ),
-        "min_area_treated": ("area_treated", "__ge__", filters.get("min_area_treated")),
-        "max_area_treated": ("area_treated", "__le__", filters.get("max_area_treated")),
+        "min_area_treated": (
+            and_,
+            (
+                ("area_treated", "__ge__", filters.get("min_area_treated")),
+                ("area_treated", "isnot", None),
+            ),
+        ),
+        "max_area_treated": (
+            and_,
+            (
+                ("area_treated", "__le__", filters.get("max_area_treated")),
+                ("area_treated", "isnot", None),
+            ),
+        ),
     }
 
     return jsonify(
         helpers.search(
-            Practice,
-            page,
-            limit,
-            [v for k, v in query_filters_config.items() if filters.get(k)],
+            model=Practice,
+            page=page,
+            limit=limit,
+            query_filters_config=[
+                v for k, v in query_filters_config.items() if filters.get(k) is not None
+            ],
             group_by=group_by,
             aggregates=aggregates,
+            partitions=partitions,
+            partition_size=partition_size,
             order_by=order_by,
         )
     )

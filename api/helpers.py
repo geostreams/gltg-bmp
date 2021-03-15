@@ -1,4 +1,5 @@
 import math
+import re
 from typing import Any
 from typing import cast
 from typing import Iterable
@@ -61,6 +62,8 @@ def search(
     columns: Iterable[InstrumentedAttribute] = (),
     group_by: Iterable[str] = (),
     aggregates: Iterable[str] = (),
+    partitions: Iterable[str] = (),
+    partition_size: int = 0,
     order_by: Iterable[str] = (),
 ) -> SearchResults:
     """
@@ -74,6 +77,9 @@ def search(
     :param group_by: List of columns to group the query by.
     :param aggregates: List of aggregate function to apply to a column. Each item must be a string in the following
            format: `<column-name>-<aggregate_function>`.
+    :param partitions: List of columns to partition over.
+    :param partition_size: number of items to include in each partition.
+           A non-positive integer means include everything.
     :param order_by: List of columns to order the query by.
            Column names must be prepended with + or -, indicating whether to sort them in ascending or descending
            order respectively.
@@ -106,9 +112,8 @@ def search(
     if group_by:
         query = query.group_by(*group_by)
 
+    order_by_args = []
     if order_by:
-        order_by_args = []
-
         for column_order in order_by:
             if column_order[0] == "-":
                 column_name = column_order[1:]
@@ -124,9 +129,27 @@ def search(
 
             order_by_args.append(order_func(column))
 
-        query = query.order_by(*order_by_args)
-
     query = query.filter(*query_filters)
+
+    if partitions:
+        partition_columns = []
+        for column_name in partitions:
+            if column_name in dynamic_columns:
+                partition_columns.append(dynamic_columns[column_name])
+            else:
+                partition_columns.append(getattr(model, column_name))
+
+        row_number = (
+            func.row_number()
+            .over(partition_by=partition_columns, order_by=order_by_args)
+            .label("row_number")
+        )
+        query = query.add_column(row_number).from_self()
+
+        if partition_size > 0:
+            query = query.filter(row_number <= partition_size)
+    else:
+        query = query.order_by(*order_by_args)
 
     count = query.count()
 
@@ -135,15 +158,19 @@ def search(
 
     total_pages = math.ceil(count / limit)
 
+    query_params = re.sub(
+        "&$", "", re.sub(r"page=\d+&?", "", request.query_string.decode())
+    )
+
     previous_url = None
     if page > 1:
         previous_url = (
-            f"{request.base_url}?page={min(page - 1, total_pages)}&limit={limit}"
+            f"{request.base_url}?page={min(page - 1, total_pages)}&{query_params}"
         )
 
     next_url = None
     if page * limit < count:
-        next_url = f"{request.base_url}?page={page + 1}&limit={limit}"
+        next_url = f"{request.base_url}?page={page + 1}&{query_params}"
 
     def query_list_to_dict(items):
         out = {}
@@ -157,8 +184,8 @@ def search(
 
     return {
         "count": count,
-        "first": f"{request.base_url}?page=1&limit={limit}",
-        "last": f"{request.base_url}?page={total_pages}&limit={limit}",
+        "first": f"{request.base_url}?page=1&{query_params}",
+        "last": f"{request.base_url}?page={total_pages}&{query_params}",
         "previous": previous_url,
         "next": next_url,
         "results": results,
