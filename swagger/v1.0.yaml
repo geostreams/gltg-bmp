@@ -108,6 +108,8 @@ paths:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/group_by'
         - $ref: '#/components/parameters/aggregates'
+        - $ref: '#/components/parameters/partitions'
+        - $ref: '#/components/parameters/partition_size'
         - $ref: '#/components/parameters/order_by'
         - $ref: '#/components/parameters/huc_8'
         - $ref: '#/components/parameters/state'
@@ -352,6 +354,21 @@ components:
         type: array
         items:
           type: string
+    partitions:
+      name: partitions
+      description: List of columns to partition over
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+    partition_size:
+      name: partition_size
+      description: Number of items to include in each partition. -1 means include everything.
+      in: query
+      required: false
+      schema:
+        type: number
     order_by:
       name: order_by
       description: List of columns to order the query by.
