@@ -522,7 +522,7 @@ components:
         sunset:
           type: integer
         active_year:
-          type: number
+          type: integer
         category:
           type: string
         wq_benefits:

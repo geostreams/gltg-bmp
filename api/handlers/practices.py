@@ -21,7 +21,7 @@ class Practice(db.Base):
     applied_date = Column(BigInteger)
     funding = Column(Float(53))
     sunset = Column(BigInteger)
-    active_year = Column(Float(53))
+    active_year = Column(BigInteger)
     category = Column(Text)
     wq_benefits = Column(Text)
     area_treated = Column(Float(53))

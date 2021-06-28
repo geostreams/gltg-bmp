@@ -248,6 +248,7 @@ class Database:
             all_practices.append(practices)
         all_practices = pd.concat(all_practices)
         all_practices.columns = self.clean_column_names(all_practices)
+        all_practices.index += 1
 
         print("Updating practices...")
         missing_huc8 = set()
@@ -447,11 +448,18 @@ class Database:
         print("Importing practices...")
         self.engine.execute("DROP INDEX IF EXISTS ix_practices_temp_id")
 
-        all_practices.to_sql(
+        all_practices.merge(
+            calculated_columns,
+            left_index=True,
+            right_index=True,
+        ).to_sql(
             "practices_temp",
             con=self.engine,
             index_label="id",
-            dtype={"ancillary_benefits": sqlalchemy.types.JSON},
+            dtype={
+                "ancillary_benefits": sqlalchemy.types.JSON,
+                "active_year": sqlalchemy.BIGINT,
+            },
             if_exists="append",
         )
 
