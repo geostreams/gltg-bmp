@@ -3,8 +3,7 @@
   "name": "bmp.practices-extractor",
   "version": "1.0",
   "description": "Best Management Practices Extractor. Extract practices from file and add to bmp database",
-  "author": "Aaraj Habib <aarajh@illinois.edu>",
-  "contributors": [],
+  "author": "NCSA",
   "contexts": [],
   "repository": [
     {
@@ -13,9 +12,8 @@
     }
   ],
   "process": {
-    "file": [
-      "text/csv",
-      "application/excel"
+    "dataset": [
+      "file.added"
     ]
   },
   "external_services": [],

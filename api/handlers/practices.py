@@ -1,17 +1,9 @@
 from flask import jsonify
-from sqlalchemy import and_
-from sqlalchemy import BigInteger
-from sqlalchemy import Column
-from sqlalchemy import Float
-from sqlalchemy import JSON
-from sqlalchemy import or_
-from sqlalchemy import Text
-
-from api import helpers
-from api.db import Base
+from sqlalchemy import JSON, BigInteger, Column, Float, Text, and_, or_
+from utils import db, query
 
 
-class Practice(Base):
+class Practice(db.Base):
     __tablename__ = "practices"
 
     id = Column(BigInteger, primary_key=True, index=True)
@@ -43,7 +35,7 @@ class Practice(Base):
 
 
 def get(practice_id):
-    return jsonify(helpers.get(Practice, practice_id))
+    return jsonify(query.get(Practice, practice_id))
 
 
 def search(
@@ -106,7 +98,7 @@ def search(
     }
 
     return jsonify(
-        helpers.search(
+        query.search(
             model=Practice,
             page=page,
             limit=limit,
