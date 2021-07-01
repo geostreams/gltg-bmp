@@ -1,9 +1,8 @@
 # Local Folders
+data/resources
+data/WBD_National_GDB
 logs/
-resources/
 volumes/
-traefik/
-clowder-data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

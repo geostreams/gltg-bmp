@@ -1,14 +1,9 @@
 from flask import jsonify
-from sqlalchemy import BigInteger
-from sqlalchemy import Column
-from sqlalchemy import JSON
-from sqlalchemy import Text
-
-from api import helpers
-from api.db import Base
+from sqlalchemy import JSON, BigInteger, Column, Text
+from utils import db, query
 
 
-class Assumption(Base):
+class Assumption(db.Base):
     __tablename__ = "assumptions"
 
     id = Column(Text, primary_key=True, index=True)
@@ -54,8 +49,8 @@ class Assumption(Base):
 
 
 def get(assumption_id):
-    return jsonify(helpers.get(Assumption, assumption_id))
+    return jsonify(query.get(Assumption, assumption_id))
 
 
 def search(page, limit):
-    return jsonify(helpers.search(Assumption, page, limit))
+    return jsonify(query.search(Assumption, page, limit))

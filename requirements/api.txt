@@ -1,0 +1,5 @@
+-r common.txt
+Flask==2.0.1
+Flask-Cors==3.0.10
+click==8.0.1
+connexion[swagger-ui]==2.7.0

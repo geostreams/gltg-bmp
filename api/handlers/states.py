@@ -1,13 +1,10 @@
 from flask import jsonify
-from sqlalchemy import Column
-from sqlalchemy import Float
-from sqlalchemy import Text
-
-from api import helpers
-from api.db import Base
+from handlers.practices import Practice
+from sqlalchemy import Column, Float, Text
+from utils import db, query
 
 
-class State(Base):
+class State(db.Base):
     __tablename__ = "states"
 
     id = Column(Text, primary_key=True, index=True)
@@ -24,8 +21,21 @@ class State(Base):
 
 
 def get(state_id):
-    return jsonify(helpers.get(State, state_id))
+    return jsonify(query.get(State, state_id))
 
 
 def search(page, limit):
-    return jsonify(helpers.search(State, page, limit))
+    available_states = [
+        state
+        for (state,) in Practice.query.session.query(Practice.state)
+        .group_by(Practice.state)
+        .all()
+    ]
+    return jsonify(
+        query.search(
+            model=State,
+            page=page,
+            limit=limit,
+            query_filters_config=[("id", "in_", available_states)],
+        )
+    )
