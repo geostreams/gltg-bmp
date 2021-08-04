@@ -121,10 +121,9 @@ services:
   bmp_api:
     build:
       context: .
-      dockerfile: docker/bmp_api/Dockerfile
     depends_on:
       - postgres
-    command: [ "run" ]
+    command: ["python", "api/app.py", "run" ]
     networks:
       - bmp
     environment:
@@ -147,7 +146,7 @@ services:
   bmp_extractor:
     build:
       context: .
-      dockerfile: docker/bmp_extractor/Dockerfile
+    command: ["python", "-m", "extractor.practices_extractor"]
     depends_on:
       - rabbitmq
       - clowder_monitor
