@@ -84,8 +84,8 @@ services:
       - bmp
     environment:
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management path_prefix "/rabbitmq"
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-guest}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-guest}
+      - DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-guest}
+      - DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-guest}
     volumes:
       - rabbitmq:/var/lib/rabbitmq
 
