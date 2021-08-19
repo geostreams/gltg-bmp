@@ -1,8 +1,5 @@
 openapi: 3.0.3
 
-servers:
-  - url: /api/v1.0
-
 info:
   title: Best Management Practices Portal API
   version: '1.0'
@@ -525,7 +522,7 @@ components:
         sunset:
           type: integer
         active_year:
-          type: number
+          type: integer
         category:
           type: string
         wq_benefits:

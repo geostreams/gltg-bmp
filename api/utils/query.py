@@ -1,24 +1,12 @@
 import math
 import re
-from typing import Any
-from typing import cast
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import TypedDict
-from typing import Union
+from typing import Any, Iterable, List, Optional, Tuple, TypedDict, Union, cast
 
 from connexion import request
-from sqlalchemy import and_
-from sqlalchemy import asc
-from sqlalchemy import desc
-from sqlalchemy import func
-from sqlalchemy import or_
+from sqlalchemy import and_, asc, desc, func, or_
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import BinaryExpression
-
-from api.db import Base
+from utils import db
 
 ColumnName = str  # The column name in the model
 Expression = str  # The sql expression to apply on the column
@@ -34,11 +22,11 @@ class SearchResults(TypedDict):
     last: str
     previous: Optional[str]
     next: Optional[str]
-    results: Iterable[Base]
+    results: Iterable[db.Base]
 
 
 def process_query_filters(
-    model: Base, query_filter_config: QueryFilterConfig
+    model: db.Base, query_filter_config: QueryFilterConfig
 ) -> BinaryExpression:
     if len(query_filter_config) == 2:
         query_filters = []
@@ -50,12 +38,12 @@ def process_query_filters(
         return getattr(getattr(model, key), op)(value)
 
 
-def get(model: Base, query_id: Union[str, int]) -> Base:
+def get(model: db.Base, query_id: Union[str, int]) -> db.Base:
     return model.query.get(query_id)
 
 
 def search(
-    model: Base,
+    model: db.Base,
     page: int,
     limit: int,
     query_filters_config: Iterable[QueryFilterConfig] = (),

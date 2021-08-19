@@ -1,59 +1,40 @@
+## GLTG BMP
 
-### Set up
+This package contains an API application that serves the BMP data, and a Clowder extractor that updates the database
+used by the API with the BMP Sheets added to datasets in Clowder.
 
+You can run the API either directly or with docker. It is recommended to run Clowder and the BMP extractor with docker.
 
+### Common setup
 
 - Copy `.env-example` to `.env` and adjust the config variables for your environment.
-
-- Create a new Postgres database for the name used in `DATABASE_URI` in the `.env` file.
-
-The app might work with older versions of PostgreSQL, but it is only tested with version 12.
-
-- Install the requirements from `requirements.txt`. If you are setting up a development environment, install
-
-`requirements-dev.txt` too.
-
-- Before doing any development, run `pre-commit install` to set up the git hooks for the project.
-
-
-
-### Initialize Database
-
-
-
 - Download the HUC8 GeoDatabase from ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/Hydrography/WBD/National/GDB/
+  and unzip the GDB file in `data/WBD_National_GDB`.
 
-and unzip the GDB file in the path mentioned in `CONFIG["huc8"]` in `import_data.py`.
+### Development setup
 
-- Download the `practices` spreadsheet and put it in the path mentioned `CONFIG["practices"]` in `import_data.py`.
+- Install the libraries in `requirements/dev.txt`.
+- Run `pre-commit install` to set up the git hooks for the project.
 
-- Run `python import_data.py` to populate the database.
+### Run the AI directly
 
+- Create a new Postgres database and install postgis on it.
+  Make sure to set `DB_NAME` environment variable to the database you create.
+  > The app might work with older versions of PostgreSQL, but it is only tested with version 13.
+- Install the following requirements:
+  - `requirements/api.txt` for the api
+  - `requirements/extractor.txt` for the Clowder extractor
+- Run `python api/app.py prepare-db` to load assumptions, states, and huc8 data into the database.
+- Run `python api/app.py run` to start the API server. The server starts at `localhost:8000/bmp-api` by default.
+  > You can see a list of all available options for the API server by running `python api/app.py --help`.
 
+### Run with docker and docker-compose
 
-### Use Connexion
-
-
-`./manage` script is a wrapper for Connexion cli.
-
-It handles some of the environment variable for the Flask server used by Connexion.
-
-This script accepts two flags:
-
-`-h` shows help and `-d` calls `flask` with development variables.
-
-In order to run the server in development mode, call `./manage -d`.
-
-
-### Run everything in Docker
-
-Adjust the variables for docker services in a `.env` file in the root folder. See `.env.example` for an example subset of all variables.
-
-- Run `docker-compose up -d postgres`  to start the database after adjusting its settings in `.env`
-- Follow the above [Set up](#set-up) and [Intialize Database](#initialize-database) steps for importing data.
-
-- Bring up services with `docker-compose up`. If you are using the example env file, the api can be accessed at http://localhost:8000/api/v1.0/ and clowder at http://localhost:8000/clowder.
-
-To setup clowder, create an account using the `CLOWDER_ADMINS` variable or [follow these instructions](https://github.com/clowder-framework/clowder#initializing-clowder).
-
-The practices extractor  (`bmp.practices_extractor`) status can be monitored at http://localhost:8000/monitor or at http://localhost:8000/clowder/extractors . If it is not there, you might have to wait a bit for Clowder to register the extractor.
+- Start the services by running `docker-compose up -d`. It might take a while for all the services to start
+  and the extractor to register with rabbitmq. The default port is 8080 and all the routes are handles by traefik.
+  Here is the list of default routes, which can be changed via environment variables.
+  - API: `/bmp-api`
+  - Clowder: `/clowder`
+  - Clowder monitor: `/monitor/`
+- Run `docker-compose exec bmp_api python api/app.py prepare-db` to load
+  assumptions, states, and huc8 data into the database.
